@@ -9,4 +9,4 @@ next-env.d.ts
 __pycache__/
 
 # Resume LaTeX source and build files (not published)
-resume/
+/resume/

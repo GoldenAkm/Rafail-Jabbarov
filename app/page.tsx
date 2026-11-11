@@ -1,20 +1,23 @@
+import Backdrop from "@/components/Backdrop";
 import DecodeText from "@/components/DecodeText";
+import HeroScope from "@/components/HeroScope";
 import Panel from "@/components/Panel";
 import SectionHead from "@/components/SectionHead";
 import StatusBar from "@/components/StatusBar";
+import { musicCredit, tracks } from "@/data/music";
 import { experience, profile, projects, skills } from "@/data/profile";
 
 export default function Home() {
   return (
     <>
-      <div className="backdrop" aria-hidden="true" />
+      <Backdrop />
       <StatusBar />
 
       <main id="top">
         {/* Hero */}
         <section className="hero">
+          <HeroScope />
           <div className="hero__meta">
-            <span className="tag tag--live">Available // {profile.availability.term}</span>
             <span className="muted">{profile.location}</span>
           </div>
           <DecodeText as="h1" className="hero__name" text={profile.name.toUpperCase()} speed={45} />
@@ -26,8 +29,8 @@ export default function Home() {
             <a className="btn btn--primary" href="#projects">
               View projects
             </a>
-            <a className="btn" href={profile.resume} target="_blank" rel="noopener">
-              Resume.pdf
+            <a className="btn" href="/resume">
+              Resume
             </a>
             <a className="btn" href={profile.linkedin} target="_blank" rel="noopener">
               LinkedIn
@@ -45,14 +48,6 @@ export default function Home() {
             <div>
               <dt>Grad</dt>
               <dd>{profile.graduation}</dd>
-            </div>
-            <div>
-              <dt>Co-op</dt>
-              <dd>{profile.availability.length}</dd>
-            </div>
-            <div>
-              <dt>Relocate</dt>
-              <dd>{profile.availability.relocate}</dd>
             </div>
           </dl>
         </section>
@@ -150,33 +145,17 @@ export default function Home() {
             ))}
           </ol>
         </section>
-
-        {/* Contact */}
-        <section id="contact" className="section">
-          <SectionHead index="05" title="OPEN CHANNEL" note="Secure link" />
-          <Panel className="contact" label="Transmission" code="TX-READY">
-            <p>
-              Looking for a {profile.availability.term} placement, {profile.availability.length}. Happy to relocate to{" "}
-              {profile.availability.relocate}.
-            </p>
-            <div className="hero__actions">
-              <a className="btn btn--primary" href={`mailto:${profile.email}`}>
-                {profile.email}
-              </a>
-              <a className="btn" href={profile.github} target="_blank" rel="noopener">
-                github.com/{profile.githubHandle}
-              </a>
-              <a className="btn" href={profile.linkedin} target="_blank" rel="noopener">
-                LinkedIn
-              </a>
-            </div>
-          </Panel>
-        </section>
       </main>
 
       <footer className="footer">
         <span>© {new Date().getFullYear()} {profile.name}</span>
-        <span className="muted">Built with Next.js // Victoria, BC</span>
+        <span className="muted">
+          Music: {tracks.dark.title} &amp; {tracks.light.title} by{" "}
+          <a href={musicCredit.url} target="_blank" rel="noopener">
+            {musicCredit.artist}
+          </a>{" "}
+          ({musicCredit.license}) // Built with Next.js
+        </span>
       </footer>
     </>
   );

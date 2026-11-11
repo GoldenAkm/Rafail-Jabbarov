@@ -13,11 +13,6 @@ export const profile = {
   resume: "/resume.pdf",
   tagline:
     "I design circuit boards, write the firmware that runs on them, and automate the systems around them.",
-  availability: {
-    term: "Winter 2027 co-op (January)",
-    length: "4 or 8 months",
-    relocate: "Greater Vancouver / Edmonton",
-  },
   bio: [
     "I'm a Computer Engineering student at the University of Victoria, past my second year and focused on embedded systems, digital design and signal processing.",
     "Before engineering school took over, I spent two years running Linux and AWS infrastructure for the university, which taught me to automate the boring parts and keep systems up.",

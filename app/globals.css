@@ -1,16 +1,68 @@
-/* Corpo HUD theme: near-black base, cyan primary, amber signal accent. */
+/* Corpo HUD theme. Night: near-black base, cyan primary, amber signal accent.
+   Day: paper-white console with the same accents darkened for contrast.
+   Theme is set by data-theme on <html> (see ThemeToggle), else the OS setting. */
 :root {
   --bg: #06090d;
   --bg-2: #0b1118;
   --panel: rgba(12, 20, 28, 0.78);
+  --bar-bg: rgba(6, 9, 13, 0.85);
   --line: rgba(0, 229, 255, 0.22);
   --line-strong: rgba(0, 229, 255, 0.55);
   --text: #d7e3ea;
+  --heading: #ffffff;
   --muted: #6f8796;
   --cyan: #00e5ff;
+  --cyan-hover: #6ff2ff;
   --amber: #ffb000;
+  --on-accent: #021015;
+  --hover-bg: rgba(0, 229, 255, 0.1);
+  --glow: rgba(0, 229, 255, 0.35);
+  --sweep: rgba(0, 229, 255, 0.12);
+  --halo-1: rgba(0, 229, 255, 0.12);
+  --halo-2: rgba(255, 176, 0, 0.06);
+  --scan: rgba(255, 255, 255, 0.018);
+  --rule: rgba(111, 135, 150, 0.25);
+  --chip-line: rgba(255, 176, 0, 0.4);
+  --trace: rgba(0, 229, 255, 0.07);
+  --trace-strong: rgba(0, 229, 255, 0.18);
+  --pulse: rgba(0, 229, 255, 0.85);
+  --hud: rgba(0, 229, 255, 0.4);
+  --scope-bg: rgba(4, 12, 16, 0.55);
+  --scroll-thumb: rgba(0, 229, 255, 0.45);
   --chamfer: 14px;
   --max: 1120px;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #e9eef2;
+  --bg-2: #f7fafc;
+  --panel: rgba(255, 255, 255, 0.85);
+  --bar-bg: rgba(233, 238, 242, 0.88);
+  --line: rgba(0, 104, 122, 0.2);
+  --line-strong: rgba(0, 104, 122, 0.5);
+  --text: #1a2730;
+  --heading: #0a141c;
+  --muted: #566a77;
+  --cyan: #00707f;
+  --cyan-hover: #005a66;
+  --amber: #9a5a00;
+  --on-accent: #ffffff;
+  --hover-bg: rgba(0, 112, 127, 0.08);
+  --glow: rgba(0, 112, 127, 0.18);
+  --sweep: rgba(0, 112, 127, 0.08);
+  --halo-1: rgba(0, 112, 127, 0.1);
+  --halo-2: rgba(154, 90, 0, 0.06);
+  --scan: rgba(0, 0, 0, 0.02);
+  --rule: rgba(86, 106, 119, 0.25);
+  --chip-line: rgba(154, 90, 0, 0.45);
+  --trace: rgba(0, 90, 110, 0.12);
+  --trace-strong: rgba(0, 90, 110, 0.32);
+  --pulse: rgba(154, 90, 0, 0.55);
+  --hud: rgba(0, 90, 110, 0.5);
+  --scope-bg: rgba(255, 255, 255, 0.6);
+  --scroll-thumb: rgba(0, 112, 127, 0.45);
+  color-scheme: light;
 }
 
 *,
@@ -22,10 +74,30 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 72px;
+  /* Slim themed scrollbar (Firefox); WebKit/Blink versions below */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) var(--bg);
+}
+
+html::-webkit-scrollbar {
+  width: 6px;
+}
+
+html::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+html::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: var(--cyan);
 }
 
 body {
   margin: 0;
+  overflow-x: clip;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-mono), ui-monospace, monospace;
@@ -61,19 +133,296 @@ p {
   color: var(--muted);
 }
 
-/* Background: blueprint grid + faint scanlines + vignette */
+/* Background: grid + scanlines + halos, then PCB traces and HUD telemetry (Backdrop.tsx) */
 .backdrop {
   position: fixed;
   inset: 0;
   z-index: -1;
+  overflow: hidden;
+  background: var(--bg);
+  pointer-events: none;
+}
+
+.backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
   background:
-    radial-gradient(ellipse at 70% -10%, rgba(0, 229, 255, 0.12), transparent 55%),
-    radial-gradient(ellipse at -10% 110%, rgba(255, 176, 0, 0.06), transparent 50%),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at 70% -10%, var(--halo-1), transparent 55%),
+    radial-gradient(ellipse at -10% 110%, var(--halo-2), transparent 50%),
+    repeating-linear-gradient(0deg, var(--scan) 0 1px, transparent 1px 3px),
     linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 48px 48px,
-    linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 48px 48px,
-    var(--bg);
+    linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 48px 48px;
   opacity: 0.55;
+}
+
+.backdrop__board {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.board__traces path {
+  fill: none;
+  stroke: var(--trace);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.board__vias circle {
+  fill: var(--bg);
+  stroke: var(--trace-strong);
+  stroke-width: 1.5;
+}
+
+.board__pulses path {
+  fill: none;
+  stroke: var(--pulse);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 70 930;
+  stroke-dashoffset: 1000;
+  filter: drop-shadow(0 0 4px var(--pulse));
+  animation: trace-pulse 9s linear infinite;
+}
+
+/* Engineering-drawing layer: Day only */
+.board__drawing {
+  display: none;
+  fill: none;
+  stroke: var(--trace-strong);
+  stroke-width: 1;
+}
+
+.board__drawing text {
+  fill: var(--muted);
+  stroke: none;
+  font-family: var(--font-mono), monospace;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+}
+
+.board__drawing .datum {
+  stroke-dasharray: 6 4;
+}
+
+/* HUD telemetry */
+.hud {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hud);
+}
+
+.hud--coords {
+  top: 76px;
+  left: 20px;
+}
+
+.hud--serial {
+  bottom: 22px;
+  left: 20px;
+}
+
+.hud--bars {
+  bottom: 22px;
+  right: 24px;
+  align-items: flex-end;
+}
+
+.hud__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 28px;
+  margin-top: 4px;
+}
+
+.hud__bars span {
+  width: 4px;
+  background: var(--hud);
+  transform-origin: bottom;
+  animation: bar-flicker 2.8s ease-in-out infinite alternate;
+}
+
+.hud--hex {
+  top: 90px;
+  right: 18px;
+  height: 46vh;
+  overflow: hidden;
+  mask-image: linear-gradient(transparent, #000 20%, #000 80%, transparent);
+}
+
+.hud__hex-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: hex-scroll 40s linear infinite;
+}
+
+.crosshair {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+}
+
+.crosshair::before,
+.crosshair::after {
+  content: "";
+  position: absolute;
+  background: var(--hud);
+}
+
+.crosshair::before {
+  left: 8px;
+  top: 0;
+  width: 1px;
+  height: 18px;
+}
+
+.crosshair::after {
+  top: 8px;
+  left: 0;
+  width: 18px;
+  height: 1px;
+}
+
+.crosshair--tl { top: 60px; left: 50%; margin-left: -580px; }
+.crosshair--tr { top: 60px; left: 50%; margin-left: 562px; }
+.crosshair--bl { bottom: 70px; left: 50%; margin-left: -580px; }
+.crosshair--br { bottom: 70px; left: 50%; margin-left: 562px; }
+
+/* Day: drawing title block, bottom-right like an engineering sheet */
+.title-block {
+  display: none;
+  position: absolute;
+  right: 24px;
+  bottom: 80px;
+  padding: 8px 12px;
+  border: 1px solid var(--trace-strong);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+:root[data-theme="light"] .board__drawing,
+:root[data-theme="light"] .title-block {
+  display: block;
+}
+
+:root[data-theme="light"] .board__pulses path {
+  filter: none;
+}
+
+:root[data-theme="light"] .board__traces path {
+  stroke-dasharray: none;
+}
+
+/* Oscilloscope behind the hero */
+.scope {
+  position: absolute;
+  top: 50%;
+  /* Bleed past the content column, but stop 16px short of the viewport edge */
+  right: max(-160px, calc((100% - 100vw) / 2 + 16px));
+  width: min(40vw, 560px);
+  aspect-ratio: 15 / 8;
+  transform: translateY(-58%);
+  z-index: -1;
+  border: 1px solid var(--line);
+  background: var(--scope-bg);
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  opacity: 0.9;
+}
+
+.scope__screen {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.scope__grid line {
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.scope__grid .scope__axis {
+  stroke: var(--line-strong);
+  stroke-dasharray: none;
+}
+
+.scope__wave path {
+  fill: none;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.scope__wave {
+  animation: scope-drift 12s linear infinite;
+}
+
+.scope__wave--ch1 path {
+  stroke: var(--cyan);
+  opacity: 0.75;
+  filter: drop-shadow(0 0 3px var(--glow));
+}
+
+.scope__wave--ch2 {
+  animation-duration: 19s;
+}
+
+.scope__wave--ch2 path {
+  stroke: var(--amber);
+  opacity: 0.55;
+}
+
+.scope__labels {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.scope__trig {
+  margin-left: auto;
+  color: var(--amber);
+}
+
+@keyframes trace-pulse {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes scope-drift {
+  to {
+    transform: translateX(-600px);
+  }
+}
+
+@keyframes hex-scroll {
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes bar-flicker {
+  to {
+    transform: scaleY(0.4);
+  }
 }
 
 /* Status bar */
@@ -86,12 +435,108 @@ p {
   justify-content: space-between;
   gap: 16px;
   padding: 12px clamp(16px, 4vw, 40px);
-  background: rgba(6, 9, 13, 0.85);
+  background: var(--bar-bg);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--line);
   font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.statusbar__right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.theme-toggle {
+  display: flex;
+  gap: 6px;
+  padding: 4px 10px;
+  background: none;
+  border: 1px solid var(--line-strong);
+  color: var(--muted);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.theme-toggle:hover {
+  background: var(--hover-bg);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+}
+
+.theme-toggle .on {
+  color: var(--cyan);
+}
+
+.music-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: none;
+  border: 1px solid var(--line-strong);
+  color: var(--muted);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.music-toggle:hover {
+  background: var(--hover-bg);
+}
+
+.music-toggle:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+}
+
+.music-toggle.is-playing {
+  color: var(--cyan);
+}
+
+.music-toggle.is-loading {
+  cursor: progress;
+}
+
+.music-toggle.is-loading .music-toggle__eq span {
+  animation: eq 0.5s ease-in-out infinite alternate;
+  opacity: 0.6;
+}
+
+.music-toggle__eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 10px;
+}
+
+.music-toggle__eq span {
+  width: 2px;
+  height: 3px;
+  background: currentColor;
+}
+
+.music-toggle.is-playing .music-toggle__eq span {
+  animation: eq 0.9s ease-in-out infinite alternate;
+}
+
+.music-toggle.is-playing .music-toggle__eq span:nth-child(2) { animation-delay: -0.3s; }
+.music-toggle.is-playing .music-toggle__eq span:nth-child(3) { animation-delay: -0.6s; }
+.music-toggle.is-playing .music-toggle__eq span:nth-child(4) { animation-delay: -0.15s; }
+
+@keyframes eq {
+  from { height: 2px; }
+  to { height: 10px; }
 }
 
 .statusbar__id {
@@ -128,6 +573,7 @@ p {
 }
 
 .statusbar__clock {
+  white-space: nowrap;
   color: var(--cyan);
   font-variant-numeric: tabular-nums;
 }
@@ -140,6 +586,8 @@ main {
 
 /* Hero */
 .hero {
+  position: relative;
+  isolation: isolate;
   min-height: calc(100svh - 50px);
   display: flex;
   flex-direction: column;
@@ -158,23 +606,12 @@ main {
   margin-bottom: 20px;
 }
 
-.tag {
-  border: 1px solid var(--line-strong);
-  padding: 4px 10px;
-  color: var(--cyan);
-}
-
-.tag--live {
-  border-color: rgba(255, 176, 0, 0.6);
-  color: var(--amber);
-}
-
 .hero__name {
   font-size: clamp(44px, 9vw, 108px);
   line-height: 0.95;
   font-weight: 700;
-  color: #fff;
-  text-shadow: 0 0 24px rgba(0, 229, 255, 0.35);
+  color: var(--heading);
+  text-shadow: 0 0 24px var(--glow);
 }
 
 .hero__role {
@@ -210,20 +647,20 @@ main {
 }
 
 .btn:hover {
-  background: rgba(0, 229, 255, 0.1);
+  background: var(--hover-bg);
   color: var(--cyan);
 }
 
 .btn--primary {
   background: var(--cyan);
   border-color: var(--cyan);
-  color: #021015;
+  color: var(--on-accent);
   font-weight: 500;
 }
 
 .btn--primary:hover {
-  background: #6ff2ff;
-  color: #021015;
+  background: var(--cyan-hover);
+  color: var(--on-accent);
 }
 
 .readout {
@@ -271,7 +708,7 @@ main {
 
 .section-head h2 {
   font-size: clamp(26px, 4vw, 38px);
-  color: #fff;
+  color: var(--heading);
   white-space: nowrap;
 }
 
@@ -351,7 +788,7 @@ main {
 
 .panel h3 {
   font-size: 22px;
-  color: #fff;
+  color: var(--heading);
   margin-bottom: 6px;
 }
 
@@ -387,7 +824,7 @@ main {
   align-items: center;
   gap: 12px;
   padding: 7px 0;
-  border-bottom: 1px dashed rgba(111, 135, 150, 0.25);
+  border-bottom: 1px dashed var(--rule);
 }
 
 .skills li:last-child {
@@ -403,12 +840,12 @@ main {
 .meter span {
   width: 14px;
   height: 8px;
-  background: rgba(111, 135, 150, 0.25);
+  background: var(--rule);
 }
 
 .meter span.on {
   background: var(--cyan);
-  box-shadow: 0 0 6px rgba(0, 229, 255, 0.5);
+  box-shadow: 0 0 6px var(--glow);
 }
 
 /* Projects: scan sweep on hover is the signature card effect */
@@ -420,7 +857,7 @@ main {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent, rgba(0, 229, 255, 0.12), transparent);
+  background: linear-gradient(180deg, transparent, var(--sweep), transparent);
   transform: translateY(-100%);
   pointer-events: none;
 }
@@ -456,7 +893,7 @@ main {
   font-size: 11px;
   letter-spacing: 0.08em;
   padding: 3px 8px;
-  border: 1px solid rgba(255, 176, 0, 0.4);
+  border: 1px solid var(--chip-line);
   color: var(--amber);
 }
 
@@ -493,8 +930,39 @@ main {
   margin-bottom: 8px;
 }
 
-.contact p {
-  max-width: 620px;
+/* Resume viewer */
+.pdf-viewer {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.pdf-viewer__pages {
+  display: grid;
+  gap: 16px;
+}
+
+.pdf-viewer__pages canvas {
+  display: block;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 0 32px var(--sweep);
+}
+
+.pdf-viewer__status {
+  margin: 0;
+  padding: 48px 0;
+  text-align: center;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.pdf-viewer__error {
+  display: block;
+  margin-top: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--amber);
 }
 
 .footer {
@@ -521,9 +989,72 @@ main {
   }
 }
 
+@media (max-width: 1240px) {
+  .crosshair,
+  .hud--hex {
+    display: none;
+  }
+}
+
+/* Not enough room beside the hero text: fade the scope behind it and drop
+   the drawing annotations that would collide with content */
+@media (max-width: 1319px) {
+  .scope {
+    opacity: 0.3;
+  }
+
+  .scope__labels {
+    display: none;
+  }
+
+  :root[data-theme="light"] .board__drawing,
+  :root[data-theme="light"] .title-block {
+    display: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .statusbar__clock-label,
+  .music-toggle__text {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .statusbar nav {
+    display: none;
+  }
+
+  .scope {
+    width: 100%;
+    right: 0;
+    opacity: 0.35;
+  }
+
+  .scope__labels {
+    display: none;
+  }
+}
+
 @media (max-width: 720px) {
   .statusbar nav {
     display: none;
+  }
+
+  .scope,
+  .hud--coords,
+  .hud--serial,
+  .title-block {
+    display: none !important;
+  }
+
+  .statusbar__clock-label,
+  .music-toggle__text {
+    display: none;
+  }
+
+  .statusbar__right {
+    gap: 10px;
   }
 
   .section-head__note {
@@ -532,6 +1063,31 @@ main {
 
   .section-head h2 {
     white-space: normal;
+  }
+}
+
+@media (max-width: 420px) {
+  .statusbar {
+    gap: 8px;
+  }
+
+  .statusbar__right {
+    gap: 6px;
+  }
+
+  .music-toggle,
+  .theme-toggle {
+    padding: 4px 7px;
+  }
+
+  .theme-toggle {
+    gap: 4px;
+  }
+}
+
+@media (max-width: 359px) {
+  .statusbar__clock {
+    display: none;
   }
 }
 
