@@ -7,3 +7,6 @@ next-env.d.ts
 .venv/
 .idea/
 __pycache__/
+
+# Resume LaTeX source and build files (not published)
+resume/
